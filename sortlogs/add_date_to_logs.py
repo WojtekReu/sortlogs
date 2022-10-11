@@ -9,7 +9,6 @@ from datetime import datetime
 import gzip
 import os
 from pathlib import Path
-import sys
 import typer
 
 DIRECTORY_DEST = "corrected_mail_logs"

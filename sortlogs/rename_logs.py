@@ -2,12 +2,10 @@
 """
 Gzip and rename log files in order that was changed (by mtime).
 """
-import gzip
 import logging
 import os
 from pathlib import Path
 import subprocess
-import sys
 import typer
 
 # files in this directory can be overwritten.
