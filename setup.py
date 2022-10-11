@@ -1,4 +1,10 @@
+import os
 from setuptools import setup, find_packages
+
+SETUP_DIR = os.path.dirname(__file__)
+
+with open(os.path.join(SETUP_DIR, "requirements.txt"), "r") as f:
+    REQUIREMENTS = f.read()
 
 setup(
     name='sortlogs',
@@ -10,6 +16,7 @@ setup(
     author_email='wojciech@reunix.eu',
     description='Commands to sorting logs from some services',
     python_requires=">=3.6",
+    install_requires=REQUIREMENTS,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
