@@ -13,6 +13,8 @@ DIRECTORY_DEST: str = "converted_logs"
 FIRST_FILENAME_NUMBER: int = 1000
 EXT: str = ".gz"
 
+logging.basicConfig(level=logging.INFO)
+
 
 def main(
     base_filename: str = typer.Argument(
@@ -57,13 +59,13 @@ def main(
         destination_path = destination.joinpath(new_filename)
 
         if destination_path.exists():
-            logging.error(
-                f"ERROR: Destination file {destination_path} exists. Overwrite is not allowed."
+            logging.warning(
+                f"Destination file {destination_path} exists. Overwrite is not allowed."
             )
             raise typer.Abort()
 
         os.rename(filename_gzipped, destination_path)
-        logging.info(f"{filename}    ->    {destination_path}")
+        logging.info(f"{filename} \t-> {destination_path}")
         i += 1
 
     if i == FIRST_FILENAME_NUMBER:

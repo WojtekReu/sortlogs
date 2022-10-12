@@ -18,6 +18,7 @@ setup(
     python_requires=">=3.6",
     install_requires=REQUIREMENTS,
     classifiers=[
+        "Environment :: Console",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX :: Linux",

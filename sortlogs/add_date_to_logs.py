@@ -7,11 +7,14 @@ chronological order.
 """
 from datetime import datetime
 import gzip
+import logging
 import os
 from pathlib import Path
 import typer
 
 DIRECTORY_DEST = "corrected_mail_logs"
+
+logging.basicConfig(level=logging.INFO)
 
 
 def get_month_from_line(line: str):
@@ -32,7 +35,7 @@ def process_mail_err_file(f, f_dest, year: int):
         month_nr = get_month_from_line(line)
         if month_nr > month_nr_before:
             year -= 1
-            print(f"Year changed in mail.err: {year=}")
+            logging.info(f"Year changed in mail.err: {year=}")
         month_nr_before = month_nr
         file_data.insert(0, f"{year} {line}")
 
@@ -53,7 +56,7 @@ def process_mail_log_file(f, f_dest, years: list):
             # year has changed
             # add to list older year: [2020] -> [2019, 2020]
             years.insert(0, years[0] - 1)
-            print(f"Added to years list: {years=}")
+            logging.info(f"Added to years list: {years=}")
         month_nr_before = month_nr
 
     f.seek(0)
@@ -67,7 +70,7 @@ def process_mail_log_file(f, f_dest, years: list):
             # get next year
             year = years[year_index]
             year_index += 1
-            print(f"Year changed: {year=}  {year_index=}")
+            logging.info(f"Year changed: {year=}  {year_index=}")
         # add year and write log line
         f_dest.write(f"{year} {line}")
 
@@ -87,15 +90,21 @@ def main(
 ):
     """
     Convert mail logs by adding year before each line with month name at first word.
+    Probably you want to use command this way:
+    for f in mail.*; do echo $f; ./add_date_to_logs.py $f; done
     """
     years = []
 
     dest_file_path = destination.joinpath(filename)
     if dest_file_path.exists():
-        print(
-            f"ERROR: Destination file {dest_file_path} exists. Overwrite is not allowed."
+        logging.error(
+            f"Destination file {dest_file_path} exists. Overwrite is not allowed."
         )
-        raise typer.Exit(code=1)
+        raise typer.Abort()
+
+    if not filename.exists():
+        logging.error(f"Filename {filename} does not exist.")
+        raise typer.Abort()
 
     # Get year from input file mtime attribute.
     file_atime = os.stat(filename).st_atime
