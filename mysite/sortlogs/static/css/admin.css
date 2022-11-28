@@ -1,0 +1,10 @@
+.log-sheet {
+    font-family: monospace;
+}
+.extra-menu {
+    padding: 40px 20px;
+}
+.log-list-table a {
+    white-space: nowrap;
+    color: #666666;
+}

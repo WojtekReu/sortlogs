@@ -10,6 +10,8 @@ import gzip
 import logging
 import os
 from pathlib import Path
+from typing import TextIO
+
 import typer
 
 DIRECTORY_DEST = "corrected_mail_logs"
@@ -17,19 +19,19 @@ DIRECTORY_DEST = "corrected_mail_logs"
 logging.basicConfig(level=logging.INFO)
 
 
-def get_month_from_line(line: str):
+def get_month_from_line(line: str) -> int:
     """
     Get month from first word in the line, ex. Jan
     """
-    month_str = line.split(" ", 1)[0]
-    return datetime.strptime(month_str, "%b").month
+    month: str = line.split(" ", 1)[0]
+    return datetime.strptime(month, "%b").month
 
 
-def process_mail_err_file(f, f_dest, year: int):
+def process_mail_err_file(f: TextIO, f_dest: TextIO, year: int) -> None:
     """
     Mail error logs have reverse chronology line - from newer to older
     """
-    month_nr_before = 12
+    month_nr_before: int = 12
     file_data = []
     for line in f.readlines():
         month_nr = get_month_from_line(line)
@@ -44,11 +46,11 @@ def process_mail_err_file(f, f_dest, year: int):
         f_dest.write(line)
 
 
-def process_mail_log_file(f, f_dest, years: list):
+def process_mail_log_file(f: TextIO, f_dest: TextIO, years: list) -> None:
     """
     Process mail.log, mail.info and mail.warn files
     """
-    month_nr_before = 1
+    month_nr_before: int = 1
     for line in f.readlines():
         # find if file has logs from more years than one. It means find Dec to Jan jumps.
         month_nr = get_month_from_line(line)
@@ -93,9 +95,9 @@ def main(
     Probably you want to use command this way:
     for f in mail.*; do echo $f; ./add_date_to_logs.py $f; done
     """
-    years = []
+    years: list = []
 
-    dest_file_path = destination.joinpath(filename)
+    dest_file_path: Path = destination.joinpath(filename)
     if dest_file_path.exists():
         logging.error(
             f"Destination file {dest_file_path} exists. Overwrite is not allowed."

@@ -1,0 +1,41 @@
+{% extends "admin/custom_base_site.html" %}
+{% load i18n static support %}
+
+{% block content %}
+<h1>{% trans 'Graph logs' %}</h1>
+<table id="result_list">
+<thead>
+    <tr>
+    <th>*</th>
+    {% for header in col_headers %}<th>{{ header }}</th>{% endfor %}
+    </tr>
+</thead>
+<tbody>
+    {% for row in table %}
+        <tr>
+        <th>
+            {{ row_headers|get_row_header:forloop.counter0 }}
+        </th>
+            {% for col in row %}
+                <td>
+                    {% for el in col %}
+                        <div>
+                        <form action="{% url 'sortlogs:show_date_logs' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="level" value="{{ el.level }}">
+                            <input type="hidden" name="category" value="{{ el.category }}">
+                            <input type="hidden" name="domain" value="{{ el.domain }}">
+                            <input type="hidden" name="port" value="{{ el.port }}">
+                            <input type="hidden" name="date" value="*">
+                            <input type="submit" value="{{ el.label }}" >
+                        </form>
+                        </div>
+                    {% endfor %}
+                </td>
+            {% endfor %}
+        {% add_empty_td row col_headers %}
+        </tr>
+    {% endfor %}
+</tbody>
+</table>
+{% endblock %}

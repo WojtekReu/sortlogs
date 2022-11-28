@@ -33,9 +33,9 @@ def main(
     Rename and gzip files from current dir and move them to a new destination. Destination has to
     exist. Gzip file only if not gzipped.
     """
-    listdir = os.listdir(".")
+    listdir: list[str] = os.listdir(".")
     listdir = list(filter(lambda x: x.startswith(base_filename), listdir))
-    listdir_ext = []
+    listdir_ext: list = []
     for filename in listdir:
         mktime = os.stat(filename).st_mtime
         listdir_ext.append((filename, mktime))

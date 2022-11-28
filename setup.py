@@ -1,10 +1,12 @@
-import os
+import json
+from pathlib import Path
 from setuptools import setup, find_packages
 
-SETUP_DIR = os.path.dirname(__file__)
+SETUP_DIR = Path(__file__).parent
 
-with open(os.path.join(SETUP_DIR, "requirements.txt"), "r") as f:
-    REQUIREMENTS = f.read()
+with open(SETUP_DIR.joinpath("Pipfile.lock"), "r") as f:
+    data = json.loads(f.read())
+    REQUIREMENTS = "\n".join(f"{k}{v['version']}" for k, v in data['default'].items())
 
 setup(
     name='sortlogs',
@@ -15,10 +17,11 @@ setup(
     author='Wojciech Zając',
     author_email='wojciech@reunix.eu',
     description='Commands to sorting logs from some services',
-    python_requires=">=3.6",
+    python_requires=">=3.11",
     install_requires=REQUIREMENTS,
     classifiers=[
         "Environment :: Console",
+        "Framework :: Django :: 4.1",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX :: Linux",

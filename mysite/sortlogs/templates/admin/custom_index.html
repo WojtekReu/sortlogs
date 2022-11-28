@@ -1,0 +1,16 @@
+{% extends "admin/index.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "css/admin.css" %}">{% endblock %}
+
+{% block javascripts %}{{ block.super }}<script type="text/javascript" src="{% static 'js/admin.js' %}"></script>{% endblock %}
+
+{% block footer %}
+    <div class="extra-menu">
+        <div class="colMS">
+            <p><a href="{% url 'sortlogs:show_date_logs' %}">{% translate "Show date logs" %}</a></p>
+            <p><a href="{% url 'sortlogs:graph_logs' %}">{% translate "Show grap" %}</a></p>
+        </div>
+    </div>
+    {{ block.super }}
+{% endblock %}

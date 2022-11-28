@@ -1,0 +1,15 @@
+{% extends "admin/custom_base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+<h1>{% trans "Search logs" %}</h1>
+{% if pattern %}
+    <p>{% trans "For pattern" %}: {{ pattern }}</p>
+{% endif %}
+{% if values_list %}
+<hr><br>
+<div id="log-sheet">
+{% for row in values_list %}<div>{{ row }}</div>{% endfor %}
+<div>
+{% endif %}
+{% endblock %}
