@@ -44,12 +44,10 @@ class Category(BasicStructure):
 
 class Domain(BasicStructure):
     """
-    Domain pmno was earlier zgloszenia
+    Domains
     """
-    PMNO = 'pmno'
-    ZGLOSZENIA = 'zgloszenia'
-    TESTPMNO = 'testpmno'
-    SPORT = 'sport'
+    EXAMPLE = 'example'  # example.com
+    TEST = 'test'  # test.example.com
 
 
 class Port(BasicStructure):
@@ -63,31 +61,15 @@ class Port(BasicStructure):
 
 # first part of filename
 INPUT_FILES = {
-    'pmno.pl-443-access': (Level.LOG, Category.NGINX, Domain.PMNO, Port.HTTPS),
-    'pmno.pl-443-error': (Level.ERROR, Category.NGINX, Domain.PMNO, Port.HTTPS),
-    'pmno.pl-80-access': (Level.LOG, Category.NGINX, Domain.PMNO, Port.WWW),
-    'pmno.pl-80-error': (Level.ERROR, Category.NGINX, Domain.PMNO, Port.WWW),
-    'sport.reu.pl-443-access': (Level.LOG, Category.NGINX, Domain.SPORT, Port.HTTPS),
-    'sport.reu.pl-443-error': (Level.ERROR, Category.NGINX, Domain.SPORT, Port.HTTPS),
-    'sport.reu.pl-80-access': (Level.LOG, Category.NGINX, Domain.SPORT, Port.WWW),
-    'sport.reu.pl-80-error': (Level.ERROR, Category.NGINX, Domain.SPORT, Port.WWW),
-    'test-pmno.reu.pl-443-access': (Level.LOG, Category.NGINX, Domain.TESTPMNO, Port.HTTPS),
-    'test-pmno.reu.pl-443-error': (Level.ERROR, Category.NGINX, Domain.TESTPMNO, Port.HTTPS),
-    'test-pmno.reu.pl-80-access': (Level.LOG, Category.NGINX, Domain.TESTPMNO, Port.WWW),
-    'test-pmno.reu.pl-80-error': (Level.ERROR, Category.NGINX, Domain.TESTPMNO, Port.WWW),
-    'zgloszenia-pmno.reu.pl-443-access': (Level.LOG, Category.NGINX, Domain.ZGLOSZENIA, Port.HTTPS),
-    'zgloszenia-pmno.reu.pl-443-error': (Level.ERROR, Category.NGINX, Domain.ZGLOSZENIA, Port.HTTPS),
-    'zgloszenia-pmno.reu.pl-80-access': (Level.LOG, Category.NGINX, Domain.ZGLOSZENIA, Port.WWW),
-    'zgloszenia-pmno.reu.pl-80-error': (Level.ERROR, Category.NGINX, Domain.ZGLOSZENIA, Port.WWW),
-    'pmnopl-stdout---supervisor': (Level.LOG, Category.UWSGI, Domain.PMNO, Port.EMPTY),
-    'pmnopl-celery-stdout---supervisor': (Level.LOG, Category.CELERY, Domain.PMNO, Port.EMPTY),
-    'sportex-stdout---supervisor': (Level.LOG, Category.UWSGI, Domain.SPORT, Port.EMPTY),
-    'sportex-celery-stdout---supervisor': (Level.LOG, Category.CELERY, Domain.SPORT, Port.EMPTY),
-    'testpmno-stdout---supervisor': (Level.LOG, Category.UWSGI, Domain.TESTPMNO, Port.EMPTY),
-    'testpmno-celery-stdout---supervisor': (Level.LOG, Category.CELERY, Domain.TESTPMNO, Port.EMPTY),
-    'zgpmno-stdout---supervisor': (Level.LOG, Category.UWSGI, Domain.ZGLOSZENIA, Port.EMPTY),
-    'mail.err': (Level.ERROR, Category.MAIL, Domain.PMNO, Port.EMPTY),
-    'mail.log': (Level.LOG, Category.MAIL, Domain.PMNO, Port.EMPTY),
-    'mail.warn': (Level.WARN, Category.MAIL, Domain.PMNO, Port.EMPTY),
-    'mail.info': (Level.INFO, Category.MAIL, Domain.PMNO, Port.EMPTY),
+    'example.com-443-access': (Level.LOG, Category.NGINX, Domain.EXAMPLE, Port.HTTPS),
+    'example.com-443-error': (Level.ERROR, Category.NGINX, Domain.EXAMPLE, Port.HTTPS),
+    'example.com-80-access': (Level.LOG, Category.NGINX, Domain.EXAMPLE, Port.WWW),
+    'example.com-80-error': (Level.ERROR, Category.NGINX, Domain.EXAMPLE, Port.WWW),
+    'test.example.com-443-access': (Level.LOG, Category.NGINX, Domain.TEST, Port.HTTPS),
+    'example-com-stdout---supervisor': (Level.LOG, Category.UWSGI, Domain.EXAMPLE, Port.EMPTY),
+    'example-com-celery---supervisor': (Level.LOG, Category.CELERY, Domain.EXAMPLE, Port.EMPTY),
+    'mail.err': (Level.ERROR, Category.MAIL, Domain.EXAMPLE, Port.EMPTY),
+    'mail.log': (Level.LOG, Category.MAIL, Domain.EXAMPLE, Port.EMPTY),
+    'mail.warn': (Level.WARN, Category.MAIL, Domain.EXAMPLE, Port.EMPTY),
+    'mail.info': (Level.INFO, Category.MAIL, Domain.EXAMPLE, Port.EMPTY),
 }
