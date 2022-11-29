@@ -41,12 +41,14 @@ def input_structure() -> tuple[list[list], list[str], list[str]]:
         else:
             label = f"{domain}:{port}"
 
-        col.append({
-            'label': label,
-            'level': level,
-            'category': category,
-            'domain': domain,
-            'port': port,
-        })
+        col.append(
+            {
+                "label": label,
+                "level": level,
+                "category": category,
+                "domain": domain,
+                "port": port,
+            }
+        )
 
     return table, col_headers, row_headers

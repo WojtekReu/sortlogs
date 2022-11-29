@@ -7,26 +7,27 @@ class ShowDateLogsForm(Form):
     """
     Search log keys according given pattern
     """
+
     level = ChoiceField(
         choices=Level.gen_list_choices(),
-        label=_('Level'),
+        label=_("Level"),
     )
     category = ChoiceField(
         choices=Category.gen_list_choices(),
-        label=_('Category'),
+        label=_("Category"),
     )
     domain = ChoiceField(
         choices=Domain.gen_list_choices(),
-        label=_('Domain'),
+        label=_("Domain"),
     )
     port = ChoiceField(
         choices=Port.gen_list_choices(),
-        initial='',
-        label=_('Port'),
+        initial="",
+        label=_("Port"),
         required=False,
     )
     date = CharField(
-        initial='*',
-        label=_('Date'),
+        initial="*",
+        label=_("Date"),
         required=False,
     )

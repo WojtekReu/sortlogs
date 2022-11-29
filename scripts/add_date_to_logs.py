@@ -99,9 +99,7 @@ def main(
 
     dest_file_path: Path = destination.joinpath(filename)
     if dest_file_path.exists():
-        logging.error(
-            f"Destination file {dest_file_path} exists. Overwrite is not allowed."
-        )
+        logging.error(f"Destination file {dest_file_path} exists. Overwrite is not allowed.")
         raise typer.Abort()
 
     if not filename.exists():

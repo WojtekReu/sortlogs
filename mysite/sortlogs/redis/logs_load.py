@@ -13,20 +13,21 @@ from ..parsers import celery_parser, mail_parser, nginx_err_parser, nginx_log_pa
 from ..structure import INPUT_FILES, Level, Category
 
 
-BASE_DATES = 'base_dates'  # set
-BASE_FILES = 'base_files'  # list
-BASE_KEYS = 'base_keys'  # hash
-BASE_KEYS_LEN = 'base_keys_len'  # hash: key = log_uwsgi_localhost__2022-09-20; value = 5690 (len)
+BASE_DATES = "base_dates"  # set
+BASE_FILES = "base_files"  # list
+BASE_KEYS = "base_keys"  # hash
+BASE_KEYS_LEN = "base_keys_len"  # hash: key = log_uwsgi_localhost__2022-09-20; value = 5690 (len)
 # keys for BASE_KEY hash
-FIRST_LOG_TIME = 'first_log_time'  # time of the first log in the key
-LAST_LOG_TIME = 'last_log_time'  # time of the last log in the key
-LINES_NUMBER = 'lines_number'  # how many log lines has the key
+FIRST_LOG_TIME = "first_log_time"  # time of the first log in the key
+LAST_LOG_TIME = "last_log_time"  # time of the last log in the key
+LINES_NUMBER = "lines_number"  # how many log lines has the key
 
 
 class Redis:
     """
     Connection to redis db
     """
+
     def __init__(self) -> None:
         """
         Initialize connection to redis database
@@ -38,6 +39,7 @@ class LogParser:
     """
     Setup for log parser
     """
+
     def __init__(self, filename: str) -> None:
         """
         Set main log settings for loaded file
@@ -106,10 +108,11 @@ class LogLine:
     """
     Parsed line of logs
     """
-    key: str = ''
-    key_date: str = ''
-    log_time: str = ''
-    line: str = ''
+
+    key: str = ""
+    key_date: str = ""
+    log_time: str = ""
+    line: str = ""
     datetime: datetime
 
     def __init__(self, line: str) -> None:
@@ -126,8 +129,10 @@ class LogLine:
         if line_datetime:
             self.datetime = line_datetime
             self.set_key_attrs()
-            self.key = f'{log_parser.level}_{log_parser.category}_{log_parser.domain}_' \
-                       f'{log_parser.port}_{self.key_date}'
+            self.key = (
+                f"{log_parser.level}_{log_parser.category}_{log_parser.domain}_"
+                f"{log_parser.port}_{self.key_date}"
+            )
         else:
             self.datetime = log_line_before.datetime
             self.key_date = log_line_before.key_date
@@ -138,26 +143,27 @@ class LogLine:
         """
         Some log rows have time in local timezone. Change it to UTC
         """
-        self.datetime = pytz.timezone('UTC').localize(self.datetime)
-        warsaw_zone = pytz.timezone('Europe/Warsaw')
-        self.key_date = self.datetime.astimezone(warsaw_zone).strftime('%Y-%m-%d')
-        self.log_time = self.datetime.astimezone(warsaw_zone).strftime('%H:%M:%S')
+        self.datetime = pytz.timezone("UTC").localize(self.datetime)
+        warsaw_zone = pytz.timezone("Europe/Warsaw")
+        self.key_date = self.datetime.astimezone(warsaw_zone).strftime("%Y-%m-%d")
+        self.log_time = self.datetime.astimezone(warsaw_zone).strftime("%H:%M:%S")
         if not self.key.endswith(self.key_date):
             # change key if needed
-            self.key = '_'.join(self.key.split('_')[:-1]+[self.key_date])
+            self.key = "_".join(self.key.split("_")[:-1] + [self.key_date])
 
     def set_key_attrs(self) -> None:
         """
         Set key_date and log_time
         """
-        self.key_date = self.datetime.strftime('%Y-%m-%d')
-        self.log_time = self.datetime.strftime('%H:%M:%S')
+        self.key_date = self.datetime.strftime("%Y-%m-%d")
+        self.log_time = self.datetime.strftime("%H:%M:%S")
 
 
 class Loader(Redis):
     """
     Main class load logs data to redis.
     """
+
     log_line_before: Optional[LogLine] = None
     temporary_key: Optional[str] = None
     first_log_time: str
@@ -212,15 +218,15 @@ class Loader(Redis):
         Load file with logs and start processing filelog
         """
         file_path = os.path.join(os.getcwd(), file_path_str)
-        filename = file_path_str.split('/')[-1]
+        filename = file_path_str.split("/")[-1]
         self.redis.rpush(BASE_FILES, filename)
         self.log_parser = LogParser(filename)
 
-        if filename.endswith('.gz'):
+        if filename.endswith(".gz"):
             function_open = gzip.open
         else:
             function_open = open
-        with function_open(file_path, 'rt') as f:
+        with function_open(file_path, "rt") as f:
             for line in f.readlines():
                 log_line = LogLine(line)
                 log_line.parse_line(self.log_parser, self.log_line_before)
@@ -231,7 +237,7 @@ class Loader(Redis):
                         # any time when new key is generated then check if order is maintain
                         if self.temporary_key:
                             self.temporary_key_process(log_line)
-                            self.temporary_key = ''
+                            self.temporary_key = ""
                         self.update_base_keys(log_line)
                 except AttributeError:
                     # self.log_line_before is None
@@ -253,9 +259,8 @@ class Loader(Redis):
         Logs order is required. If you try to load older logs than exists in specified key, then
         rename existing key to temporary name, load logs and check if you can join existing logs.
         """
-        if (
-                self.log_parser.category == Category.UWSGI
-                and new_log_line.line.startswith('*** Starting uWSGI ')
+        if self.log_parser.category == Category.UWSGI and new_log_line.line.startswith(
+            "*** Starting uWSGI "
         ):
             new_log_line.correct_datetime()
 
@@ -263,12 +268,12 @@ class Loader(Redis):
         log_time = new_log_line.log_time
         base_key = self.get_base_keys(key)
         if base_key.get(LAST_LOG_TIME) and log_time <= base_key.get(LAST_LOG_TIME):
-            self.temporary_key = f'{key}_{log_time}'
+            self.temporary_key = f"{key}_{log_time}"
             self.first_log_time = base_key.get(FIRST_LOG_TIME)  # this is needed later
             try:
                 self.redis.rename(key, self.temporary_key)
             except redis.exceptions.ResponseError as e:
-                logging.error('Some error for key: %s', key)
+                logging.error("Some error for key: %s", key)
                 raise e
             logging.warning(
                 'Create temporary_key "%s" for key "%s"',
@@ -284,7 +289,7 @@ class Loader(Redis):
             while True:
                 value = self.redis.lpop(self.temporary_key)
                 if value is None:
-                    logging.info('Key joined to: %s', log_line.key)
+                    logging.info("Key joined to: %s", log_line.key)
                     break
                 self.redis.rpush(log_line.key, value)
         else:
@@ -305,7 +310,7 @@ class LogsFromRedis(Redis):
         """
         Get keys list
         """
-        return sorted([key.decode('utf-8') for key in self.redis.keys(pattern)])
+        return sorted([key.decode("utf-8") for key in self.redis.keys(pattern)])
 
     def get_values(self, pattern: str) -> list[tuple[str, str]]:
         """
@@ -314,18 +319,20 @@ class LogsFromRedis(Redis):
         values = []
         for key in self.get_keys(pattern):
             for nr in range(self.redis.llen(key)):
-                value = self.redis.lindex(key, nr).decode('utf-8')
-                values.append((
-                    key,
-                    value,
-                ))
+                value = self.redis.lindex(key, nr).decode("utf-8")
+                values.append(
+                    (
+                        key,
+                        value,
+                    )
+                )
         return values
 
     def get_values_for_key(self, key: str, start: int = 0, end: int = -1) -> list[str]:
         """
         Get all values from list
         """
-        return [value.decode('utf-8') for value in self.redis.lrange(key, start, end)]
+        return [value.decode("utf-8") for value in self.redis.lrange(key, start, end)]
 
     def del_all(self, pattern: str) -> None:
         """
@@ -355,4 +362,8 @@ class LogsFromRedis(Redis):
                 values.get(LAST_LOG_TIME),
                 values.get(LINES_NUMBER),
             )
-        return "", "", "",
+        return (
+            "",
+            "",
+            "",
+        )

@@ -14,6 +14,7 @@ from pathlib import Path
 
 # Show log info.
 import logging
+
 logging.basicConfig(level=logging.INFO)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -91,10 +92,9 @@ CACHES = {
         "LOCATION": "redis://127.0.0.1:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     },
 }
-
 
 
 # Password validation
