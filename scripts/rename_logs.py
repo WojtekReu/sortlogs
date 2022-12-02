@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """
 Gzip and rename log files in order that was changed (by mtime).
+./rename_logs.py example.com-443-access.log
 """
 import logging
 import os
