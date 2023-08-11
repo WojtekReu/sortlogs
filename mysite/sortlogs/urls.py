@@ -3,11 +3,12 @@ Remember to restrict url for staff members
 """
 from django.urls import path
 
-from .views import ShowDateLogs, ShowLogs, GraphLogs
-from django.contrib.admin.views.decorators import staff_member_required
+from .views import SearchLogs, GraphLogs, ShowTables, ShowLoadedFiles
+from django.contrib.admin.views.decorators import staff_member_required as staff
 
 urlpatterns = [
-    path("show-date-logs/", staff_member_required(ShowDateLogs.as_view()), name="show_date_logs"),
-    path("show-logs/", staff_member_required(ShowLogs.as_view()), name="show_logs"),
-    path("graph-logs/", staff_member_required(GraphLogs.as_view()), name="graph_logs"),
+    path("show-tables/", staff(ShowTables.as_view()), name="show_tables"),
+    path("show-loaded-files/", staff(ShowLoadedFiles.as_view()), name="show_loaded_files"),
+    path("graph-logs/", staff(GraphLogs.as_view()), name="graph_logs"),
+    path("search-logs/", staff(SearchLogs.as_view()), name="search_logs"),
 ]

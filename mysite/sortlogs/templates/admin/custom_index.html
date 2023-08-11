@@ -8,8 +8,9 @@
 {% block footer %}
     <div class="extra-menu">
         <div class="colMS">
-            <p><a href="{% url 'sortlogs:show_date_logs' %}">{% translate "Show date logs" %}</a></p>
+            <p><a href="{% url 'sortlogs:show_tables' %}">{% translate "Show tables" %}</a></p>
             <p><a href="{% url 'sortlogs:graph_logs' %}">{% translate "Show grap" %}</a></p>
+            <p><a href="{% url 'sortlogs:search_logs' %}">{% translate "Search logs" %}</a></p>
         </div>
     </div>
     {{ block.super }}

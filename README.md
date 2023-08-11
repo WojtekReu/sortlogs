@@ -24,18 +24,6 @@ Add section which import logging and set logging level to INFO in `settings.py`:
     import logging
     logging.basicConfig(level=logging.INFO)
 
-Add configuration for redis connection in CACHES in `settings.py`:
-
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": "redis://127.0.0.1:6379/0",
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
-        }
-    }
-
 Customize admin index page in `YOUR_PROJECT/urls.py`:
 
     admin.site.index_template = "admin/custom_index.html"

@@ -5,6 +5,7 @@ Gzip and rename log files in order that was changed (by mtime).
 """
 import logging
 import os
+from itertools import count
 from pathlib import Path
 import subprocess
 import typer
@@ -42,7 +43,8 @@ def main(
         listdir_ext.append((filename, mktime))
 
     listdir_ext.sort(key=lambda x: x[1])
-    i = FIRST_FILENAME_NUMBER
+    counter = count(FIRST_FILENAME_NUMBER)
+    destination_path = None
 
     for line in listdir_ext:
         filename = line[0]
@@ -56,24 +58,20 @@ def main(
             # to current directory and run process again.
             filename_gzipped = f"{filename}{EXT}"
 
-        new_filename = f"{base_filename}.{i}{EXT}"
+        new_filename = f"{base_filename}.{next(counter)}{EXT}"
         destination_path = destination.joinpath(new_filename)
 
-        if destination_path.exists():
-            logging.warning(
-                f"Destination file {destination_path} exists. Overwrite is not allowed."
-            )
-            raise typer.Abort()
+        while destination_path.exists():
+            new_filename = f"{base_filename}.{next(counter)}{EXT}"
+            destination_path = destination.joinpath(new_filename)
 
         os.rename(filename_gzipped, destination_path)
         logging.info(f"{filename} \t-> {destination_path}")
-        i += 1
 
-    if i == FIRST_FILENAME_NUMBER:
+    if FIRST_FILENAME_NUMBER == next(counter):
         logging.info(f"Didn't find any files to rename for {base_filename}.")
     else:
-        files_count = i - FIRST_FILENAME_NUMBER
-        logging.info(f"For {base_filename} renamed {files_count} files.")
+        logging.info(f"The last renamed file is {destination_path}.")
 
 
 if __name__ == "__main__":

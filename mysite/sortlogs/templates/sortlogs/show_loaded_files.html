@@ -1,0 +1,29 @@
+{% extends "admin/custom_base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+<h1>{% trans "Table" %} {{ table_name }}</h1>
+    {% if error_message %}
+        <p class="errornote">{{ error_message }}</p>
+    {% endif %}
+    {% if values_list %}
+    <table>
+    <tr>
+        <th>{% translate "No." %}</th>
+        <th>{% translate "File name" %}</th>
+        <th>{% translate "Logs from" %}</th>
+        <th>{% translate "Logs to" %}</th>
+        <th>{% translate "Lines number" %}</th>
+    </tr>
+    {% for file_data in values_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ file_data.filename }}</td>
+            <td>{{ file_data.first_log_time }}</td>
+            <td>{{ file_data.last_log_time }}</td>
+            <td>{{ file_data.lines_number }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "admin/custom_base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+<h1>{% trans "Table logs" %}</h1>
+{% if values_list %}
+<div id="log-sheet">
+{% for name in values_list %}<div><a href="{% url 'sortlogs:show_loaded_files' %}?table={{ name }}">{{ name }}</a></div>{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "admin/custom_base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+<h1>{% trans "Table logs" %}</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <div><input type="submit" name="search" value="{% trans "Search" %}"></div>
+</form>
+{% if logs %}
+    {% for row in values_list %}<div>{{ row.line|linebreaksbr }}</div>{% endfor %}
+{% endif %}
+{% endblock %}

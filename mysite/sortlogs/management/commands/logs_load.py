@@ -1,14 +1,14 @@
 """
-Load logs to redis storage
+Load logs to storage
 """
 from django.core.management.base import BaseCommand
 
-from ...redis.logs_load import Loader
+from ...mongo.logs_load import Loader
 import logging
 
 
 class Command(BaseCommand):
-    help = "Load logs to redis storage"
+    help = "Load logs to storage"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -24,4 +24,4 @@ class Command(BaseCommand):
         """
         logs_file = options["logs_file"]
         Loader().load_file_logs(logs_file)
-        logging.info("Loaded to redis file: %s", logs_file)
+        logging.info("Loaded to db file: %s", logs_file)

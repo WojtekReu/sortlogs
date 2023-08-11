@@ -48,6 +48,7 @@ def input_structure() -> tuple[list[list], list[str], list[str]]:
                 "category": category,
                 "domain": domain,
                 "port": port,
+                "table": f"{level}_{category}_{domain}_{port}",
             }
         )
 

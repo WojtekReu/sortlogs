@@ -1,33 +1,42 @@
-from django.forms import CharField, Form, ChoiceField
+import datetime
+
+from django.forms import Form, ChoiceField, IntegerField, DateTimeField
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from .structure import Level, Category, Domain, Port
+from .structure import TIME_RANGE_DAYS
 
 
-class ShowDateLogsForm(Form):
+class ShowLogsForm(Form):
     """
-    Search log keys according given pattern
+    Search logs form by table, date range and limit for lines
     """
 
-    level = ChoiceField(
-        choices=Level.gen_list_choices(),
-        label=_("Level"),
+    table = ChoiceField(
+        label=_("Table"),
     )
-    category = ChoiceField(
-        choices=Category.gen_list_choices(),
-        label=_("Category"),
+    start_datetime = DateTimeField(
+        label=_("First time"),
     )
-    domain = ChoiceField(
-        choices=Domain.gen_list_choices(),
-        label=_("Domain"),
+    end_datetime = DateTimeField(
+        initial=timezone.now,
+        label=_("last time"),
     )
-    port = ChoiceField(
-        choices=Port.gen_list_choices(),
-        initial="",
-        label=_("Port"),
-        required=False,
+    limit = IntegerField(
+        label=_("Lines limit"),
+        initial=100,
     )
-    date = CharField(
-        initial="*",
-        label=_("Date"),
-        required=False,
-    )
+
+    def set_initial(self):
+        """
+        Set initial value for start_datetime one day earlier.
+        """
+        if not self.fields["start_datetime"].initial:
+            self.fields["start_datetime"].initial = timezone.now() - datetime.timedelta(
+                days=TIME_RANGE_DAYS
+            )
+
+    def set_table_choices(self, table_list):
+        """
+        Prepare table choices structure for select field
+        """
+        self.fields["table"].choices = zip(table_list, table_list)

@@ -5,13 +5,15 @@ name = "pypi"
 
 [packages]
 django = "*"
-redis = "*"
 typer = "*"
 pytz = "*"
-django-redis = "*"
+pymongo = "*"
+mongoengine = "*"
+pytest-mongodb = "*"
 
 [dev-packages]
 pytest = "*"
+pytest-django = "*"
 
 [requires]
 python_version = "3.11"

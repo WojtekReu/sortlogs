@@ -1,6 +1,14 @@
 """
 This module is some kind of project confing
 """
+DB_NAME = "sortlogsdb"
+LOADED_FILES = "a_loaded_files"
+# keys for BASE_KEY hash
+FIRST_LOG_TIME = "first_log_time"  # time of the first log in the key
+LAST_LOG_TIME = "last_log_time"  # time of the last log in the key
+LINES_NUMBER = "lines_number"  # how many log lines has the key
+COLLECTION_NAME = "collection_name"  # where logs were put in
+TIME_RANGE_DAYS = 1  # range in days for log (now - TIME_RANGE_DAYS)
 
 
 class BasicStructure:

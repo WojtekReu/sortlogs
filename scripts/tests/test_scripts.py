@@ -51,7 +51,7 @@ def test_add_date_to_logs():
             for line in f.readlines():
                 result += line
 
-        # data with line reverse order
+        # data with reverse line order
         input_data = ""
         for line in MAIL_ERROR_DATA.rstrip().split("\n"):
             input_data = f"{datetime.now().year} {line}\n" + input_data
