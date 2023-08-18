@@ -68,14 +68,9 @@ class ShowLoadedFiles(TemplateView):
 
     template_name = "sortlogs/show_loaded_files.html"
 
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-        self.table_name = request.GET["table"]
-        return response
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["table_name"] = self.request.GET["table"]
+        context["table_name"] = self.request.GET.get("table")
         logs_from_db = LogsFromDb()
         if context["table_name"] not in logs_from_db.get_tables():
             context[

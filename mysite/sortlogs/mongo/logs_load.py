@@ -6,7 +6,7 @@ from datetime import datetime
 import pymongo
 from typing import Optional, Any
 from django.conf import settings
-from ..parsers import LogLine, LogParser
+from ..parsers import LogLine, choose_parser
 from ..structure import (
     COLLECTION_NAME,
     DB_NAME,
@@ -37,7 +37,6 @@ class Loader(Database):
     log_line_before: Optional[LogLine] = None
     temporary_key: Optional[str] = None
     first_log_time: str
-    log_parser: LogParser
 
     def get_file_collections(self, filename: str) -> dict[str]:
         """
@@ -83,14 +82,15 @@ class Loader(Database):
         first_date = None
         file_path = os.path.join(os.getcwd(), file_path_str)
         filename = file_path_str.split("/")[-1]
+        file_modified_date = datetime.utcfromtimestamp(os.stat(file_path).st_mtime)
         if self.check_file_collections(filename):
             pass  # raise Exception(f"The file '{filename}' has been previously uploaded.")
 
         insert_result = self.set_file_collections({"filename": filename})
-        self.log_parser = LogParser(filename)
-        log_collection = self.db[self.log_parser.get_collection_name()]
+        log_parser = choose_parser(filename, file_modified_date)
+        log_collection = self.db[log_parser.get_collection_name()]
 
-        log_line = LogLine(self.log_parser)
+        log_line = LogLine(log_parser)
 
         if filename.endswith(".gz"):
             function_open = gzip.open
@@ -100,7 +100,7 @@ class Loader(Database):
             lines_counter = count()  # starts from 0
             for line in f.readlines():
                 next(lines_counter)  # this is line_nr - 1
-                log_line.parse_line(line)
+                log_line.set_line(line)
 
                 if log_line.update:
                     self.update_log_line(log_collection, log_line)
@@ -108,8 +108,6 @@ class Loader(Database):
                 if log_line.has_date:
                     db_result = log_collection.insert_one(
                         {
-                            "date": log_line.key_date,
-                            "time": log_line.log_time,
                             "datetime": log_line.datetime,
                             "line": log_line.line,
                         }
@@ -125,7 +123,7 @@ class Loader(Database):
                 FIRST_LOG_TIME: first_date,
                 LAST_LOG_TIME: log_line.datetime,
                 LINES_NUMBER: next(lines_counter),
-                COLLECTION_NAME: self.log_parser.get_collection_name(),
+                COLLECTION_NAME: log_parser.get_collection_name(),
             }
             self.update_file_collections(insert_result.inserted_id, values)
 

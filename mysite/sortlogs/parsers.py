@@ -1,106 +1,79 @@
 from datetime import datetime
 import pytz
 import re
-from typing import Optional, Callable
+from typing import Any, Optional
 
 from .structure import INPUT_FILES, Level, Category
 
+def choose_parser(filename: str, file_modified_date: datetime) -> Any:
+    for filename_begin, matrix in INPUT_FILES.items():
+        if filename.startswith(filename_begin):
+            m = {
+                "level": matrix[0],
+                "category": matrix[1],
+                "domain": matrix[2],
+                "port": matrix[3],
+            }
+            if m["category"] == Category.NGINX:
+                if m["level"] == Level.LOG:
+                    return NginxLogParser(**m)
 
-def nginx_log_parser(line: str) -> datetime:
-    """
-    Logs from nginx log files
-    """
-    # ip, _, user = line.split(" ")[:3]
-    # str_time = line.split(']')[0].split('[')[1]
-    str_time = re.split("[\[\]]", line, 2)[1]
-    # day, month_str, year, hour, minute, second, zone = re.split('[/: ]', str_time)
-    return datetime.strptime(str_time, "%d/%b/%Y:%H:%M:%S %z")
+                elif m["level"] == Level.ERROR:
+                    return NginxErrParser(**m)
+
+            elif m["category"] == Category.UWSGI:
+                return UwsgiParser(**m)
+
+            elif m["category"] == Category.CELERY:
+                return CeleryParser(**m)
+
+            elif m["category"] == Category.MAIL:
+                m["year"] = file_modified_date.year
+                return MailParser(**m)
+
+            elif m["category"] == Category.PG:
+                return PostgresParser(**m)
+
+            elif m["category"] == Category.REDIS:
+                return RedisParser(**m)
+
+            elif m["category"] == Category.SUPERVISORD:
+                return SupervisordParser(**m)
+
+    else:
+        raise ValueError(f"ERROR: File {filename} doesn't match to any INPUT_FILES keys.")
 
 
-def nginx_err_parser(line: str) -> datetime:
+class BaseLogParser:
     """
-    Parser for nginx error line
+    Any log parser required at least datetime_format specified.
     """
-    str_time = " ".join(line.split(" ", 2)[:2])
-    return datetime.strptime(str_time, "%Y/%m/%d %H:%M:%S")
+    datetime_format = ""
 
+    def __init__(self, **kwargs) -> None:
+        """
+        Set params
+        """
+        self.category: str = kwargs.get("category")
+        self.level: str = kwargs.get("level")
+        self.domain: str = kwargs.get("domain")
+        self.port: str = kwargs.get("port")
 
-def uwsgi_parser(line: str) -> Optional[datetime]:
-    """
-    Parser for uwsgi line
-    """
-    line_list = re.split("[\[\]]", line, 4)
-    try:
-        str_time = line_list[3]
-    except IndexError:
+    def parse_line(self, line: str) -> Optional[datetime]:
+        """
+        Parse line and get datetime. Line example:
+        2021-09-09 21:23:43,286 INFO RPC interface 'supervisor' initialized
+        """
+        return self.get_date(" ".join(line.split(" ", 2)[:2]))
+
+    def get_date(self, line: str) -> Optional[datetime]:
+        """
+        Get date and time from string
+        """
         try:
-            str_time = line_list[1]
-        except IndexError:
-            str_time = ""
-    try:
-        return datetime.strptime(str_time, "%a %b %d %H:%M:%S %Y")
-    except ValueError:
-        return
-
-
-def celery_parser(line: str) -> Optional[datetime]:
-    """
-    Parser for supervisor celery log line
-    """
-    line_list = re.split("[\[\],]", line, 2)
-    try:
-        str_time = line_list[1]
-    except IndexError:
-        str_time = ""
-
-    try:
-        return datetime.strptime(str_time, "%Y-%m-%d %H:%M:%S")
-    except ValueError:
-        return
-
-
-def mail_parser(line: str) -> Optional[datetime]:
-    """
-    Parser for mail logs line
-    """
-    # line = '2019 Jun 4 06:36:43 server postfix/smtps/smtpd[2299]: log message'
-    str_time = " ".join(re.split(" ", line, 4)[:4])
-    if len(str_time) < 12:
-        # that means date has double spaces ex.: line = '2019 Jun  4 06:36:43 server ...'
-        str_time = " ".join(re.split(" ", line, 5)[:5])
-
-    try:
-        # str_time = '2019 Feb 23 06:24:09'
-        return datetime.strptime(str_time, "%Y %b %d %H:%M:%S")
-    except ValueError:
-        return
-
-
-class LogParser:
-    """
-    Setup for log parser
-    """
-
-    def __init__(self, filename: str) -> None:
-        """
-        Set main log settings for loaded file
-        """
-        self.category: str
-        self.level: str
-        self.domain: str
-        self.port: str
-        self.is_key_changed: bool = False
-
-        for filename_begin, matrix in INPUT_FILES.items():
-            if filename.startswith(filename_begin):
-                self.level = matrix[0]
-                self.category = matrix[1]
-                self.domain = matrix[2]
-                self.port = matrix[3]
-                self.parser = self.choose_parser_method()
-                break
-        else:
-            raise ValueError(f"ERROR: File {filename} doesn't match to any INPUT_FILES keys.")
+            return datetime.strptime(line, self.datetime_format)
+        except ValueError as e:
+            return
 
     def get_collection_name(self):
         """
@@ -108,27 +81,141 @@ class LogParser:
         """
         return f"{self.level}_{self.category}_{self.domain}_{self.port}"
 
-    def choose_parser_method(self) -> Callable:
+
+class NginxLogParser(BaseLogParser):
+    """
+    Parse nginx logs. Date is like this:
+    "16/Feb/2020:06:24:23 +0000"
+    """
+    datetime_format = "%d/%b/%Y:%H:%M:%S %z"
+
+    # ip, _, user = line.split(" ")[:3]
+    # str_time = line.split(']')[0].split('[')[1]
+    # day, month_str, year, hour, minute, second, zone = re.split('[/: ]', str_time)
+
+    def parse_line(self, line: str) -> Optional[datetime]:
         """
-        Choose parser which will search date and time in any line of file
+        Parse line and get datetime for line like this:
+        1.2.3.4 - - [16/Feb/2020:06:24:23 +0000] "GET /index.html HTTP/1.1" 200 191 "-" ...
         """
-        if self.category == Category.NGINX:
-            if self.level == Level.LOG:
-                return nginx_log_parser
+        return self.get_date(re.split("[\[\]]", line, 2)[1])
 
-            elif self.level == Level.ERROR:
-                return nginx_err_parser
 
-        elif self.category == Category.UWSGI:
-            return uwsgi_parser
+class NginxErrParser(BaseLogParser):
+    """
+    Parse nginx errors. Date is like this:
+    "2020/6/30 06:24:53"
+    """
+    datetime_format = "%Y/%m/%d %H:%M:%S"
 
-        elif self.category == Category.CELERY:
-            return celery_parser
 
-        elif self.category == Category.MAIL:
-            return mail_parser
+class UwsgiParser(BaseLogParser):
+    """
+    Parse uwsgi logs from supervisor.
+    "Wed May 20 19:08:35 2020"
+    """
+    datetime_format = "%a %b %d %H:%M:%S %Y"
 
-        raise ValueError(f"Specify parser for category {self.category} or level {self.level}")
+    def parse_line(self, line: str) -> Optional[datetime]:
+        """
+        Parse uwsgi logs from supervisor. The lines can be without date or some like this:
+        *** Starting uWSGI 2.0.18 (64bit) on [Wed May 20 19:08:35 2020] ***
+        [pid: 28593|app: 0|req: 1/1] 1.2.3.4 () {52 vars ...} [Wed May 20 22:36:02 2020] GET / ...
+        """
+        line_list = re.split("[\[\]]", line, 4)
+        try:
+            str_time = line_list[3]
+        except IndexError:
+            try:
+                str_time = line_list[1]
+            except IndexError:
+                str_time = ""
+
+        return self.get_date(str_time)
+
+class CeleryParser(BaseLogParser):
+    """
+    Parser for supervisor celery log line
+    "2019-06-03 03:41:18,934"
+    """
+    datetime_format = "%Y-%m-%d %H:%M:%S,%f"
+
+    def parse_line(self, line:str) -> Optional[datetime]:
+        """
+        Parse celery logs from supervisor. Separators are `[`, `]`, `: ` (space after colon)
+        [2019-06-03 03:41:18,934: ERROR/MainProcess] consumer: Cannot connect to redis://:**@localhost:6379/1:
+        """
+        line_list = re.split("[\[\]|: ]", line, 2)
+        try:
+            str_time = line_list[1]
+        except IndexError:
+            str_time = ""
+
+        return self.get_date(str_time)
+
+
+class MailParser(BaseLogParser):
+    """
+    Parser for mail logs line
+    "2019 Jun  4 06:36:43"
+    """
+    datetime_format = "%Y %b %d %H:%M:%S"
+
+    def __init__(self, **kwargs):
+        """
+        Year from file stat (mtime)
+        """
+        super().__init__(**kwargs)
+        self.year = kwargs.get('year')
+
+    def parse_line(self, line: str) -> Optional[datetime]:
+        """
+        Line usually don't have year value, but it can be added by script add_date_to_logs.py
+        """
+        # line = '2019 Jun 14 06:36:43 server postfix/smtps/smtpd[2299]: log message'
+        # line = '2019 Jun  4 06:36:43 server ...'
+        # line = 'Jun 4 06:36:43 server ...'
+        if not line[:4].isdigit():
+            line = f"{self.year} {line}"
+
+        # line[:20] is '2019 Feb 23 06:24:09'
+        return self.get_date(line[:20])
+
+
+class PostgresParser(BaseLogParser):
+    """
+    Postgress server logs
+    "2021-09-02 17:23:40.866 UTC"
+    """
+    datetime_format = "%Y-%m-%d %H:%M:%S.%f %Z"
+
+    def parse_line(self, line: str) -> Optional[datetime]:
+        """
+        Get 3 datetime parts from begin of line separated by space.
+        """
+        return self.get_date(" ".join(line.split(" ", 3)[:3]))
+
+
+class RedisParser(BaseLogParser):
+    """
+    Redis server logs
+    "28 Aug 2022 00:01:00.138"
+    """
+    datetime_format = "%d %b %Y %H:%M:%S.%f"
+
+    def parse_line(self, line: str) -> Optional[datetime]:
+        """
+        Date is from second to fifth element space separated.
+        710:M 28 Aug 2022 00:01:00.138 * Background saving terminated with success
+        """
+        return self.get_date(" ".join(line.split(" ", 5)[1:5]))
+
+
+class SupervisordParser(BaseLogParser):
+    """
+    Datetime string example: "2021-09-09 21:23:43,286"
+    """
+    datetime_format = "%Y-%m-%d %H:%M:%S,%f"
 
 
 class LogLine:
@@ -144,20 +231,20 @@ class LogLine:
     log_time: str = ""
     line: str = ""
     line_update: Optional[str] = None
-    datetime: datetime
+    datetime: Optional[datetime] = None
     inserted_id = None
 
-    def __init__(self, log_parser: LogParser) -> None:
+    def __init__(self, log_parser: Any) -> None:
         """
-        Set parsed line
+        Set SomeLogParser.parse_line for specified file logs line
         """
-        self.parse = log_parser.parser
+        self.parse_line = log_parser.parse_line
 
-    def parse_line(self, line: str) -> None:
+    def set_line(self, line: str) -> None:
         """
         Set self.datetime, self.key_date and self.log_time for this log_line
         """
-        line_datetime = self.parse(line)
+        line_datetime = self.parse_line(line)
         if line_datetime:
             self.datetime = line_datetime
             self.line = line

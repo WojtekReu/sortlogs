@@ -1,3 +1,5 @@
+import datetime
+import mongomock
 from pathlib import Path
 
 from django.contrib.auth.models import User
@@ -36,11 +38,17 @@ def create_logs_file():
 
 
 @pytest.fixture
-def create_input_data_mongo(mongodb):
+@mongomock.patch(servers=(('127.0.0.1', 27017),))
+def create_input_data_mongo():
     value = '{"first_log_time": "00:00:58", "last_log_time": "00:01:16", "lines_number": 3}'
-    mongodb.base_keys.insert_one({"log_nginx_example_443_2021-08-22": value})
-    assert "base_keys" in mongodb.list_collection_names()
-
-    logs = example_com_data.rstrip().split("\n")
-    collection = mongodb.get_collection("log_nginx_example_443")
-    collection.insert_one({"2021-08-22": logs})
+    mongodb = mongomock.MongoClient().db
+    mongodb.log_nginx_example_443.insert_many([{
+        "datetime": datetime.datetime(year=2021, month=8, day=22, hour=0, minute=0, second=58),
+        "line": '1.2.3.4 - - [22/Aug/2021:00:00:58 +0000] "GET / HTTP/1.1" 200',
+    },{
+        "datetime": datetime.datetime(year=2021, month=8, day=22, hour=0, minute=0, second=59),
+        "line": '1.2.3.4 - - [22/Aug/2021:00:00:59 +0000] "GET /pl HTTP/1.1" 200',
+    },{
+        "datetime": datetime.datetime(year=2021, month=8, day=22, hour=0, minute=1, second=16),
+        "line": '4.3.2.1 - - [22/Aug/2021:00:01:16 +0000] "GET /mysite.html HTTP/1.1" 200',
+    }])

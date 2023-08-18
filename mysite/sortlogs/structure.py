@@ -50,6 +50,9 @@ class Category(BasicStructure):
     UWSGI = "uwsgi"
     CELERY = "celery"
     MAIL = "mail"
+    PG = "postgresql"
+    REDIS = "redis"
+    SUPERVISORD = "supervisord"
 
 
 class Domain(BasicStructure):
@@ -69,6 +72,8 @@ class Port(BasicStructure):
     HTTPS = "443"
     WWW = "80"
     EMPTY = ""
+    PG = "5432"
+    REDIS = "6379"
 
 
 # first part of filename
