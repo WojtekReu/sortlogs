@@ -24,7 +24,8 @@ class SearchLogs(FormView):
         form needs list of collections
         """
         form = super().get_form(form_class=form_class)
-        self.tables_list = LogsFromDb().get_tables()
+        logs_from_db = LogsFromDb()
+        self.tables_list = logs_from_db.get_tables()
         form.set_table_choices(self.tables_list)
         form.set_initial()
         return form

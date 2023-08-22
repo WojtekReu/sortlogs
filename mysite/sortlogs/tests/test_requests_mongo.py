@@ -1,5 +1,4 @@
 import pytest
-import mongomock
 
 
 @pytest.mark.django_db
@@ -46,16 +45,7 @@ def test_graph_logs_request(auto_login_staff):
     assert response.template_name == ["sortlogs/graph_logs.html"]
 
 
-@pytest.mark.skip(reason="Not ready yet.")
-def test_load_data():
-    """
-    Just load some data to database and check if they exist in mongodb
-    """
-    assert True
-
-@pytest.mark.skip(reason="Not ready yet.")
 @pytest.mark.django_db
-@mongomock.patch(servers=(('127.0.0.1', 27017),))
 def test_show_date_logs_post(auto_login_staff, create_input_data_mongo):
     """
     Test post show date logs
@@ -69,14 +59,26 @@ def test_show_date_logs_post(auto_login_staff, create_input_data_mongo):
     }
     response = client.post("/admin/search-logs/", data=data, follow=False)
     assert response.status_code == 200
-    assert response.template_name == ["sortlogs/search_logs.html"]
+
+    errors_str = ''
+    if hasattr(response, 'context_data'):
+        for name, errors in response.context_data['form'].errors.items():
+            errors_str = f"{errors_str}\nError in field {name}."
+            for e in errors:
+                errors_str = f"{errors_str}\n{e}"
+
+    assert '' == errors_str
 
     expected = (
-        b'<tr><td><a href="/admin/show-logs/?pattern=log_nginx_example_443_2021-08-22">'
-        b"log_nginx_example_443_2021-08-22</a></td><td>00:00:58</td><td>00:01:16</td><td>3</td>"
-        b"</tr>"
+        b'<select name="table" id="id_table">\n  <option value="log_nginx_example_443" selected>'
+        b'log_nginx_example_443</option>\n\n</select>'
     )
     assert expected in response.content
+
+    expected2 = (
+        b'<div>1.2.3.4 - - [22/Aug/2021:00:00:58 +0000] &quot;GET / HTTP/1.1&quot; 200</div>'
+    )
+    assert expected2 in response.content
 
 
 @pytest.mark.django_db

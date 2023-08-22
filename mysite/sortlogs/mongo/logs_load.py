@@ -9,7 +9,6 @@ from django.conf import settings
 from ..parsers import LogLine, choose_parser
 from ..structure import (
     COLLECTION_NAME,
-    DB_NAME,
     FIRST_LOG_TIME,
     LAST_LOG_TIME,
     Level,
@@ -26,7 +25,7 @@ class Database:
     def __init__(self) -> None:
         """ """
         client = pymongo.MongoClient(settings.MONGODB_URI)
-        self.db = client[DB_NAME]
+        self.db = client[settings.MONGODB_NAME]
 
 
 class Loader(Database):

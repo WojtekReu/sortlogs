@@ -1,7 +1,6 @@
 """
 This module is some kind of project confing
 """
-DB_NAME = "sortlogsdb"
 LOADED_FILES = "a_loaded_files"
 # keys for BASE_KEY hash
 FIRST_LOG_TIME = "first_log_time"  # time of the first log in the key

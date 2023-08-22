@@ -18,7 +18,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -87,6 +87,7 @@ DATABASES = {
     },
 }
 MONGODB_URI = "mongodb://127.0.0.1:27017/"
+MONGODB_NAME = "sortlogsdb"
 
 
 # Password validation
